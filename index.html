@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Purpose Code Data Extractor</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+    textarea {
+        width: 100%;
+        height: 200px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    #results {
+        margin-top: 20px;
+    }
+    .result {
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+    <h2>Multi-Purpose Code Data Extractor</h2>
+    <label for="dataType">Select data type to extract:</label>
+    <select id="dataType">
+        <option value="json">JSON</option>
+        <option value="html">HTML (tags 'a' and 'script')</option>
+        <option value="js">JavaScript</option>
+        <option value="emails">Emails</option>
+        <option value="hashes">Hashes</option>
+        <option value="sensitive">Sensitive Keywords (passwords, admin, etc.)</option>
+        <!-- Add more options as needed -->
+    </select>
+    <textarea id="code" placeholder="Paste your code here..."></textarea>
+    <button onclick="extractData()">Extract Data</button>
+    <div id="results"></div>
+
+    <script>
+        function extractData() {
+            var dataType = document.getElementById('dataType').value;
+            var code = document.getElementById('code').value;
+            var divResults = document.getElementById('results');
+            divResults.innerHTML = '';
+
+            try {
+                var data = [];
+
+                // Function to extract data based on selected type
+                function extractDataFromCode(text) {
+                    switch (dataType) {
+                        case 'json':
+                            extractJSON(text);
+                            break;
+                        case 'html':
+                            extractHTML(text);
+                            break;
+                        case 'js':
+                            extractJavaScript(text);
+                            break;
+                        case 'emails':
+                            extractEmails(text);
+                            break;
+                        case 'hashes':
+                            extractHashes(text);
+                            break;
+                        case 'sensitive':
+                            extractSensitiveKeywords(text);
+                            break;
+                        // Add more cases as needed for additional types
+                        default:
+                            throw new Error('Unsupported data type selected.');
+                    }
+                }
+
+                // Function to extract JSON data
+                function extractJSON(text) {
+                    try {
+                        var jsonData = JSON.parse(text);
+                        var urls = [];
+                        var emails = [];
+                        var hashes = [];
+                        var sensitiveKeywords = [];
+
+                        extractUrlsFromJSON(jsonData);
+                        displayResults(urls);
+
+                        function extractUrlsFromJSON(obj) {
+                            for (var key in obj) {
+                                if (typeof obj[key] === 'string' && (key === 'link' || key === 'href' || key === 'src')) {
+                                    urls.push(obj[key]);
+                                } else if (typeof obj[key] === 'object') {
+                                    extractUrlsFromJSON(obj[key]);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        divResults.textContent = 'Error processing JSON. Check format.';
+                    }
+                }
+
+                // Function to extract HTML data (tags 'a' and 'script')
+                function extractHTML(text) {
+                    try {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(text, 'text/html');
+                        var urls = [];
+                        var scripts = [];
+
+                        var links = doc.getElementsByTagName('a');
+                        for (var i = 0; i < links.length; i++) {
+                            urls.push(links[i].href);
+                        }
+
+                        var scriptTags = doc.getElementsByTagName('script');
+                        for (var i = 0; i < scriptTags.length; i++) {
+                            scripts.push(scriptTags[i].textContent);
+                        }
+
+                        displayResults(urls.concat(scripts));
+                    } catch (error) {
+                        divResults.textContent = 'Error processing HTML. Check format.';
+                    }
+                }
+
+                // Function to extract JavaScript data
+                function extractJavaScript(text) {
+                    try {
+                        var regex = /(?:https?|ftp):\/\/[\n\S]+/g;
+                        var matches = text.match(regex) || [];
+                        displayResults(matches);
+                    } catch (error) {
+                        divResults.textContent = 'Error processing JavaScript.';
+                    }
+                }
+
+                // Function to extract emails from text
+                function extractEmails(text) {
+                    var regex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+                    var emails = text.match(regex) || [];
+                    displayResults(emails);
+                }
+
+                // Function to extract hashes from text (example with MD5 hashes)
+                function extractHashes(text) {
+                    var regex = /(?:^|\W)([a-fA-F0-9]{32})(?:$|\W)/g; // Example regex for MD5 hashes
+                    var hashes = text.match(regex) || [];
+                    displayResults(hashes);
+                }
+
+                // Function to extract sensitive keywords from text
+                function extractSensitiveKeywords(text) {
+                    var regex = /\b(password|senha|admin|root|access)\b/gi;
+                    var sensitiveKeywords = text.match(regex) || [];
+                    displayResults(sensitiveKeywords);
+                }
+
+                // Generic function to display results
+                function displayResults(data) {
+                    if (data.length > 0) {
+                        var ul = document.createElement('ul');
+                        data.forEach(function(item) {
+                            var li = document.createElement('li');
+                            li.textContent = item;
+                            ul.appendChild(li);
+                        });
+                        divResults.appendChild(ul);
+                    } else {
+                        divResults.textContent = 'No data found.';
+                    }
+                }
+
+                // Call the appropriate function to extract data based on the selected type
+                extractDataFromCode(code);
+
+            } catch (error) {
+                divResults.textContent = 'Error processing the code. Check format or selected data type.';
+            }
+        }
+    </script>
+</body>
+</html>
