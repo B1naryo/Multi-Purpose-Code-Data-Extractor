@@ -32,7 +32,5 @@ If there are any errors during the data extraction process (e.g., invalid JSON f
 
 This script runs entirely on the client-side using JavaScript and HTML, making it compatible with most modern web browsers without any additional dependencies.
 
-## License
 
-This script is provided under the [MIT License](LICENSE). Feel free to modify and distribute it according to your needs.
 
