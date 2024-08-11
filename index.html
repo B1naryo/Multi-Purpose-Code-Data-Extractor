@@ -40,6 +40,7 @@
         <option value="emails">Emails</option>
         <option value="hashes">Hashes</option>
         <option value="sensitive">Sensitive Keywords (passwords, admin, etc.)</option>
+        <option value="xml">XML</option> <!-- Added option for XML -->
         <!-- Add more options as needed -->
     </select>
     <textarea id="code" placeholder="Paste your code here..."></textarea>
@@ -76,6 +77,9 @@
                             break;
                         case 'sensitive':
                             extractSensitiveKeywords(text);
+                            break;
+                        case 'xml': // Added case for XML
+                            extractXML(text);
                             break;
                         // Add more cases as needed for additional types
                         default:
@@ -163,6 +167,26 @@
                     var regex = /\b(password|senha|admin|root|access)\b/gi;
                     var sensitiveKeywords = text.match(regex) || [];
                     displayResults(sensitiveKeywords);
+                }
+
+                // Function to extract XML data
+                function extractXML(text) {
+                    try {
+                        var parser = new DOMParser();
+                        var xmlDoc = parser.parseFromString(text, 'application/xml');
+                        var urls = [];
+
+                        var elements = xmlDoc.getElementsByTagName('*');
+                        for (var i = 0; i < elements.length; i++) {
+                            if (elements[i].textContent.match(/(?:https?|ftp):\/\/[\n\S]+/g)) {
+                                urls.push(elements[i].textContent);
+                            }
+                        }
+
+                        displayResults(urls);
+                    } catch (error) {
+                        divResults.textContent = 'Error processing XML. Check format.';
+                    }
                 }
 
                 // Generic function to display results
